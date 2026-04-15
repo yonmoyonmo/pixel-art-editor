@@ -6,19 +6,45 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
-    }
-}
+    @StateObject private var viewModel = EditorViewModel()
 
-#Preview {
-    ContentView()
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                EditorHeaderView(
+                    columns: viewModel.canvas.columns,
+                    rows: viewModel.canvas.rows,
+                    exportAction: viewModel.beginExport
+                )
+
+                PixelCanvasView(
+                    canvas: viewModel.canvas,
+                    paintAction: viewModel.paint,
+                    endStrokeAction: viewModel.endStroke
+                )
+
+                EditorControlsView(
+                    palette: viewModel.palette,
+                    selectedColor: viewModel.selectedColor,
+                    selectedTool: viewModel.selectedTool,
+                    toolChanged: { viewModel.selectedTool = $0 },
+                    colorSelected: viewModel.selectColor,
+                    clearAction: viewModel.clearCanvas
+                )
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Pixel Art")
+            .fileExporter(
+                isPresented: $viewModel.isExporting,
+                document: viewModel.exportDocument,
+                contentType: .png,
+                defaultFilename: viewModel.exportName
+            ) { _ in }
+        }
+    }
 }
